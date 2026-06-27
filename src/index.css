@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@layer base {
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  body {
+    margin: 0; padding: 0;
+    background: #0f0f0f;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh;
+  }
+
+  #root { width: 100%; }
+
+  input, button { font-family: inherit; }
+  input:focus { outline: none; }
+  button { cursor: pointer; border: none; background: none; padding: 0; }
+}
+
+@layer utilities {
+  .line-clamp-1 { display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden; }
+  .line-clamp-2 { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+  .scrollbar-hide::-webkit-scrollbar { display:none; }
+  .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none; }
+  .safe-top { padding-top: env(safe-area-inset-top, 44px); }
+  .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
