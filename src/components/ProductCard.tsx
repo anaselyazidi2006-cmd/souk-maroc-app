@@ -1,4 +1,5 @@
 import { Heart, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { Product } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { StarRating } from './StarRating';
@@ -14,14 +15,15 @@ const BADGE_MAP = {
 interface Props { product: Product; compact?: boolean; }
 
 export function ProductCard({ product, compact }: Props) {
-  const { navigate, addToCart, toggleWishlist, isWishlisted } = useApp();
+  const nav = useNavigate();
+  const { addToCart, toggleWishlist, isWishlisted } = useApp();
   const wished   = isWishlisted(product.id);
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100) : 0;
 
   return (
     <div
-      onClick={() => navigate('product', product.id)}
+      onClick={() => nav(`/product/${product.id}`)}
       style={{
         background: COLORS.card, borderRadius: RADIUS.xl,
         overflow: 'hidden', boxShadow: SHADOW.sm,

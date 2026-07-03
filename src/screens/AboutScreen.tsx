@@ -1,5 +1,5 @@
 import { ArrowLeft, MapPin, Mail, Phone, Globe, Star, Package, Users, Award } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 
@@ -17,7 +17,7 @@ const VALUES = [
 ];
 
 export function AboutScreen() {
-  const { navigate, goBack } = useApp();
+  const nav = useNavigate();
 
   return (
     <div style={{ background: COLORS.background, minHeight: '100%', paddingBottom: 32 }}>
@@ -26,7 +26,7 @@ export function AboutScreen() {
         <img src="https://images.pexels.com/photos/2574319/pexels-photo-2574319.jpeg?auto=compress&cs=tinysrgb&w=800" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.6) 100%)' }} />
         <div style={{ position: 'absolute', top: 48, left: 16 }}>
-          <button onClick={goBack} style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', borderRadius: RADIUS.md, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(255,255,255,0.25)' }}>
+          <button onClick={() => nav(-1 as unknown as string)} style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', borderRadius: RADIUS.md, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid rgba(255,255,255,0.25)' }}>
             <ArrowLeft size={18} style={{ color: '#fff' }} />
           </button>
         </div>

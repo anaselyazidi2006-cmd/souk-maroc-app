@@ -7,8 +7,6 @@
     margin: 0; padding: 0;
     background: #0f0f0f;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh;
   }
 
   #root { width: 100%; }

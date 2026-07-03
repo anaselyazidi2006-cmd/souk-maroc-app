@@ -1,9 +1,11 @@
 import { Trash2, Plus, Minus, ShoppingBag, Tag, ChevronRight, PackageCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 
 export function CartScreen() {
-  const { cart, removeFromCart, updateQty, cartTotal, navigate } = useApp();
+  const nav = useNavigate();
+  const { cart, removeFromCart, updateQty, cartTotal } = useApp();
   const shipping = cartTotal >= 300 ? 0 : 35;
   const total    = cartTotal + shipping;
 
@@ -15,7 +17,7 @@ export function CartScreen() {
         </div>
         <h2 style={{ fontSize: 20, fontWeight: 800, color: COLORS.textPrimary, margin: 0 }}>Your cart is empty</h2>
         <p style={{ fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', margin: 0 }}>Discover authentic Moroccan crafts and add them here</p>
-        <button onClick={() => navigate('home')} style={{ height: 48, padding: '0 28px', background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 14, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 8 }}>
+        <button onClick={() => nav('/home')} style={{ height: 48, padding: '0 28px', background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 14, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 8 }}>
           Start Shopping
         </button>
       </div>
@@ -48,7 +50,7 @@ export function CartScreen() {
           {cart.map(({ product, qty }: { product: import('@/types').Product; qty: number }) => (
             <div key={product.id} style={{ background: COLORS.card, borderRadius: RADIUS.xl, padding: 12, display: 'flex', gap: 12, boxShadow: SHADOW.sm, border: `1px solid ${COLORS.border}` }}>
               <div
-                onClick={() => navigate('product', product.id)}
+                onClick={() => nav(`/product/${product.id}`)}
                 style={{ width: 80, height: 80, borderRadius: RADIUS.lg, overflow: 'hidden', flexShrink: 0, cursor: 'pointer' }}
               >
                 <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -109,7 +111,7 @@ export function CartScreen() {
 
       {/* Checkout CTA */}
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, background: COLORS.card, borderTop: `1px solid ${COLORS.border}`, padding: '12px 16px', display: 'flex', gap: 10, zIndex: 100, boxShadow: '0 -4px 16px rgba(0,0,0,0.06)' }}>
-        <button onClick={() => navigate('home')} style={{ height: 50, padding: '0 16px', border: `1.5px solid ${COLORS.border}`, borderRadius: RADIUS.lg, fontSize: 13, fontWeight: 700, color: COLORS.textSecondary, background: COLORS.card, flexShrink: 0 }}>
+        <button onClick={() => nav('/home')} style={{ height: 50, padding: '0 16px', border: `1.5px solid ${COLORS.border}`, borderRadius: RADIUS.lg, fontSize: 13, fontWeight: 700, color: COLORS.textSecondary, background: COLORS.card, flexShrink: 0 }}>
           Add More
         </button>
         <button style={{ flex: 1, height: 50, background: COLORS.primary, color: '#fff', fontWeight: 800, fontSize: 14, borderRadius: RADIUS.lg, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: SHADOW.primary }}>

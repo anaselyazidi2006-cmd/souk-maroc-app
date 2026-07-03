@@ -1,11 +1,13 @@
 import { Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { PRODUCTS } from '@/data';
 import { ProductCard } from '@/components/ProductCard';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 
 export function WishlistScreen() {
-  const { wishlist, navigate } = useApp();
+  const { wishlist } = useApp();
+  const nav = useNavigate();
   const items = PRODUCTS.filter(p => wishlist.includes(p.id));
 
   return (
@@ -24,7 +26,7 @@ export function WishlistScreen() {
           </div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: COLORS.textPrimary, margin: 0 }}>No saved items</h2>
           <p style={{ fontSize: 13, color: COLORS.textSecondary, textAlign: 'center', margin: 0 }}>Tap the ♡ on any product to save it for later</p>
-          <button onClick={() => navigate('home')} style={{ height: 48, padding: '0 28px', background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 14, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 8 }}>
+          <button onClick={() => nav('/home')} style={{ height: 48, padding: '0 28px', background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 14, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 8 }}>
             Browse Products
           </button>
         </div>

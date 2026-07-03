@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, ShoppingBag } from 'lucide-react';
@@ -28,11 +29,11 @@ function Input({ icon: Icon, type, placeholder, value, onChange }: {
 }
 
 export function WelcomeScreen() {
-  const { navigate } = useApp();
+  const nav = useNavigate();
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 400 }}>
-        <img src="https://images.pexels.com/photos/2574319/pexels-photo-2574319.jpeg?auto=compress&cs=tinysrgb&w=800" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute' }} />
+        <img src="https://images.pexels.com/photos/2574319/pexels-photo-2574319.jpeg?auto=compress&cs=tinysrgb&w=800" alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)' }} />
         <div style={{ position: 'absolute', bottom: 48, left: 0, right: 0, padding: '0 28px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -50,13 +51,13 @@ export function WelcomeScreen() {
         </div>
       </div>
       <div style={{ padding: '28px 24px 40px', background: COLORS.card, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button onClick={() => navigate('login')} style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary }}>
+        <button onClick={() => nav('/login')} style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary }}>
           Sign In
         </button>
-        <button onClick={() => navigate('register')} style={{ height: 52, background: COLORS.cardAlt, color: COLORS.textPrimary, fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, border: `1.5px solid ${COLORS.border}` }}>
+        <button onClick={() => nav('/register')} style={{ height: 52, background: COLORS.cardAlt, color: COLORS.textPrimary, fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, border: `1.5px solid ${COLORS.border}` }}>
           Create Account
         </button>
-        <button onClick={() => navigate('home')} style={{ fontSize: 13, color: COLORS.textTertiary, marginTop: 4 }}>
+        <button onClick={() => nav('/home')} style={{ fontSize: 13, color: COLORS.textTertiary, marginTop: 4 }}>
           Continue as guest
         </button>
       </div>
@@ -65,31 +66,27 @@ export function WelcomeScreen() {
 }
 
 export function LoginScreen() {
-  const { navigate, login } = useApp();
+  const nav = useNavigate();
+  const { login } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email.trim()) {
-      setError('يرجى إدخال البريد الإلكتروني');
-      return;
-    }
-    if (!password.trim()) {
-      setError('يرجى إدخال كلمة المرور');
-      return;
-    }
+    if (!email.trim()) { setError('يرجى إدخال البريد الإلكتروني'); return; }
+    if (!password.trim()) { setError('يرجى إدخال كلمة المرور'); return; }
     setLoading(true);
     setError('');
     const result = await login(email, password);
     setLoading(false);
     if (result.error) setError(result.error);
+    else nav('/home', { replace: true });
   };
 
   return (
     <div style={{ padding: '0 24px', paddingTop: 60, background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <button onClick={() => navigate('welcome')} style={{ alignSelf: 'flex-start', marginBottom: 28, color: COLORS.textSecondary, lineHeight: 0 }}>
+      <button onClick={() => nav('/welcome')} style={{ alignSelf: 'flex-start', marginBottom: 28, color: COLORS.textSecondary, lineHeight: 0 }}>
         <ArrowLeft size={22} />
       </button>
       <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.03em' }}>Welcome back 👋</h2>
@@ -103,20 +100,22 @@ export function LoginScreen() {
       <button
         onClick={handleLogin}
         disabled={loading}
-        style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1 }}
+        style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
       >
+        {loading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
         {loading ? 'جاري تسجيل الدخول...' : 'Sign In'}
       </button>
       <p style={{ textAlign: 'center', fontSize: 13, color: COLORS.textSecondary, marginTop: 20 }}>
         Don't have an account?{' '}
-        <button onClick={() => navigate('register')} style={{ color: COLORS.primary, fontWeight: 700 }}>Register</button>
+        <button onClick={() => nav('/register')} style={{ color: COLORS.primary, fontWeight: 700 }}>Register</button>
       </p>
     </div>
   );
 }
 
 export function RegisterScreen() {
-  const { navigate, register } = useApp();
+  const nav = useNavigate();
+  const { register } = useApp();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -125,33 +124,17 @@ export function RegisterScreen() {
   const [success, setSuccess] = useState(false);
 
   const handleRegister = async () => {
-    if (!name.trim()) {
-      setError('يرجى إدخال الاسم الكامل');
-      return;
-    }
-    if (!email.trim()) {
-      setError('يرجى إدخال البريد الإلكتروني');
-      return;
-    }
-    if (!password.trim()) {
-      setError('يرجى إدخال كلمة المرور');
-      return;
-    }
-    if (password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-      return;
-    }
+    if (!name.trim()) { setError('يرجى إدخال الاسم الكامل'); return; }
+    if (!email.trim()) { setError('يرجى إدخال البريد الإلكتروني'); return; }
+    if (!password.trim()) { setError('يرجى إدخال كلمة المرور'); return; }
+    if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
     setLoading(true);
     setError('');
     const result = await register(name, email, password);
     setLoading(false);
-    if (result.error) {
-      setError(result.error);
-    } else if (result.needsConfirmation) {
-      setSuccess(true);
-    } else {
-      navigate('home');
-    }
+    if (result.error) setError(result.error);
+    else if (result.needsConfirmation) setSuccess(true);
+    else nav('/home', { replace: true });
   };
 
   if (success) {
@@ -164,10 +147,7 @@ export function RegisterScreen() {
         <p style={{ fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', marginBottom: 24 }}>
           تم إرسال رسالة تأكيد إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.
         </p>
-        <button
-          onClick={() => navigate('login')}
-          style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, padding: '0 32px' }}
-        >
+        <button onClick={() => nav('/login')} style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, padding: '0 32px' }}>
           العودة لتسجيل الدخول
         </button>
       </div>
@@ -176,7 +156,7 @@ export function RegisterScreen() {
 
   return (
     <div style={{ padding: '0 24px', paddingTop: 60, background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <button onClick={() => navigate('welcome')} style={{ alignSelf: 'flex-start', marginBottom: 28, color: COLORS.textSecondary, lineHeight: 0 }}>
+      <button onClick={() => nav('/welcome')} style={{ alignSelf: 'flex-start', marginBottom: 28, color: COLORS.textSecondary, lineHeight: 0 }}>
         <ArrowLeft size={22} />
       </button>
       <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.03em' }}>Create account ✨</h2>
@@ -190,13 +170,14 @@ export function RegisterScreen() {
       <button
         onClick={handleRegister}
         disabled={loading}
-        style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1 }}
+        style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
       >
+        {loading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
         {loading ? 'جاري إنشاء الحساب...' : 'Create Account'}
       </button>
       <p style={{ textAlign: 'center', fontSize: 13, color: COLORS.textSecondary, marginTop: 20 }}>
         Already have an account?{' '}
-        <button onClick={() => navigate('login')} style={{ color: COLORS.primary, fontWeight: 700 }}>Sign In</button>
+        <button onClick={() => nav('/login')} style={{ color: COLORS.primary, fontWeight: 700 }}>Sign In</button>
       </p>
     </div>
   );

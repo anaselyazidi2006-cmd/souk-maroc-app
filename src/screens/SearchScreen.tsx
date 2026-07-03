@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, X, MapPin, Heart, ExternalLink, ChevronDown } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { searchListings, LISTING_TYPES, LISTINGS } from '@/data';
+import { LISTING_TYPES, LISTINGS } from '@/data';
 import type { Listing } from '@/types';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
+import { supabase } from '@/lib/supabase';
 
 const CITY_REGIONS = [
   { label: 'الدار البيضاء الكبرى', cities: ['Casablanca', 'Mohammedia', 'Berrechid', 'El Jadida', 'Settat', 'Ben Guerir'] },
@@ -23,13 +25,14 @@ const ALL_CITIES = CITY_REGIONS.flatMap(r => r.cities);
 
 /* ── Listing card ── */
 function ListingCard({ l }: { l: Listing }) {
-  const { navigate, toggleLike, isLiked, likeCounts } = useApp();
+  const nav = useNavigate();
+  const { toggleLike, isLiked, likeCounts } = useApp();
   const liked = isLiked(l.id);
   const likes = likeCounts[l.id] ?? l.likes;
   return (
     <div style={{ background: COLORS.card, borderRadius: RADIUS.xl, overflow: 'hidden', boxShadow: SHADOW.sm, border: `1px solid ${COLORS.border}`, marginBottom: 10 }}>
       <div style={{ display: 'flex' }}>
-        <div onClick={() => navigate('listing', l.id)} style={{ width: 110, flexShrink: 0, position: 'relative', cursor: 'pointer', background: COLORS.cardAlt }}>
+        <div onClick={() => nav(`/listing/${l.id}`)} style={{ width: 110, flexShrink: 0, position: 'relative', cursor: 'pointer', background: COLORS.cardAlt }}>
           <img src={l.image} alt={l.title} style={{ width: '100%', height: '100%', minHeight: 110, objectFit: 'cover' }} />
           {l.badge && (
             <span style={{ position: 'absolute', top: 6, left: 6, fontSize: 9, fontWeight: 800, background: l.badge === 'urgent' ? COLORS.error : l.badge === 'featured' ? '#B45309' : '#15803D', color: '#fff', padding: '2px 6px', borderRadius: RADIUS.full }}>
@@ -54,7 +57,7 @@ function ListingCard({ l }: { l: Listing }) {
                 <Heart size={11} style={{ color: liked ? COLORS.error : COLORS.textTertiary, fill: liked ? COLORS.error : 'none' }} />
                 <span style={{ fontSize: 10, fontWeight: 700, color: liked ? COLORS.error : COLORS.textTertiary }}>{likes}</span>
               </button>
-              <button onClick={() => navigate('listing', l.id)} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 8px', background: COLORS.primary100, borderRadius: RADIUS.md }}>
+              <button onClick={() => nav(`/listing/${l.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '4px 8px', background: COLORS.primary100, borderRadius: RADIUS.md }}>
                 <ExternalLink size={11} style={{ color: COLORS.primary }} />
                 <span style={{ fontSize: 10, fontWeight: 800, color: COLORS.primary }}>تفاصيل</span>
               </button>
@@ -71,39 +74,54 @@ export function SearchScreen() {
 
   const [input, setInput]         = useState(searchQuery);
   const [activeType, setActiveType] = useState('all');
-
-  // City filter state
   const [activeCity, setActiveCity]   = useState('All Cities');
   const [cityInput, setCityInput]     = useState('');
   const [cityDropOpen, setCityDropOpen] = useState(false);
+  const [dbListings, setDbListings] = useState<Listing[]>([]);
+  const [loadingDB, setLoadingDB] = useState(true);
   const cityRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityDropOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    supabase.from('listings').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      if (data) setDbListings(data.map(r => {
+        const row = r as Record<string, unknown>;
+        return {
+          id: row.id as string, userId: row.user_id as string,
+          userName: row.user_name as string, userAvatar: row.user_avatar as string,
+          userCity: row.user_city as string, userRating: Number(row.user_rating) || 4.5,
+          title: row.title as string, description: row.description as string,
+          price: row.price != null ? Number(row.price) : null, priceLabel: row.price_label as string,
+          type: row.type as Listing['type'], typeLabel: row.type_label as string,
+          category: row.category as string, image: row.image as string,
+          city: row.city as string, phone: row.phone as string, whatsapp: row.whatsapp as string,
+          createdAt: row.created_at as string, likes: Number(row.likes) || 0,
+          comments: Number(row.comments) || 0, views: Number(row.views) || 0,
+          badge: row.badge as Listing['badge'],
+        } as Listing;
+      }));
+      setLoadingDB(false);
+    });
   }, []);
+
+  const allListings: Listing[] = [
+    ...dbListings,
+    ...LISTINGS.filter(l => !dbListings.some(d => d.id === l.id)),
+  ];
 
   const handleInput = (v: string) => { setInput(v); setSearchQuery(v); };
 
-  const selectCity = (c: string) => {
-    setActiveCity(c);
-    setCityInput(c === 'All Cities' ? '' : c);
-    setCityDropOpen(false);
-  };
-
+  const selectCity = (c: string) => { setActiveCity(c); setCityInput(c === 'All Cities' ? '' : c); setCityDropOpen(false); };
   const clearCity = () => { setActiveCity('All Cities'); setCityInput(''); setCityDropOpen(false); };
 
-  // Suggestions: filter ALL_CITIES by what's typed
-  const suggestions = cityInput.trim()
-    ? ALL_CITIES.filter(c => c.toLowerCase().includes(cityInput.toLowerCase()))
-    : ALL_CITIES;
+  const suggestions = cityInput.trim() ? ALL_CITIES.filter(c => c.toLowerCase().includes(cityInput.toLowerCase())) : ALL_CITIES;
 
-  // Results
-  let results = searchListings(input, activeType, activeCity);
+  const sq = input.trim().toLowerCase();
+  const results = allListings.filter(l => {
+    const matchQ = !sq || l.title.toLowerCase().includes(sq) || l.description.toLowerCase().includes(sq) || l.city.toLowerCase().includes(sq);
+    const matchT = activeType === 'all' || l.type === activeType;
+    const matchC = activeCity === 'All Cities' || l.city === activeCity;
+    return matchQ && matchT && matchC;
+  });
 
   return (
     <div style={{ background: COLORS.background, minHeight: '100%', paddingBottom: 80 }}>
@@ -204,7 +222,7 @@ export function SearchScreen() {
       {/* ── Results ── */}
       <div style={{ padding: '12px 16px 0' }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: COLORS.textTertiary, margin: '0 0 10px' }}>
-          {results.length} إعلان
+          {loadingDB ? 'جاري التحميل...' : `${results.length} إعلان`}
           {activeCity !== 'All Cities' ? ` · 📍 ${activeCity}` : ''}
           {activeType !== 'all' ? ` · ${LISTING_TYPES.find(t => t.id === activeType)?.label}` : ''}
         </p>
