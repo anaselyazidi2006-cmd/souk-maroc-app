@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
-import { Eye, EyeOff, ArrowRight, Mail, Lock, User, ShoppingBag } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Mail, Lock, User, ShoppingBag, CheckCircle } from 'lucide-react';
 
 function Input({ icon: Icon, type, placeholder, value, onChange }: {
   icon: typeof Mail; type: string; placeholder: string; value: string; onChange: (v: string) => void;
@@ -68,11 +68,14 @@ export function WelcomeScreen() {
 
 export function LoginScreen() {
   const nav = useNavigate();
-  const { login } = useApp();
+  const { login, resetPassword } = useApp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim()) { setError('يرجى إدخال البريد الإلكتروني'); return; }
@@ -85,31 +88,83 @@ export function LoginScreen() {
     else nav('/home', { replace: true });
   };
 
+  const handleReset = async () => {
+    if (!email.trim()) { setError('يرجى إدخال البريد الإلكتروني أولاً'); return; }
+    setResetLoading(true);
+    setError('');
+    const result = await resetPassword(email);
+    setResetLoading(false);
+    if (result.error) setError(result.error);
+    else setResetSent(true);
+  };
+
+  if (resetSent) {
+    return (
+      <div style={{ padding: '0 24px', paddingTop: 60, background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', direction: 'rtl' }}>
+        <div style={{ width: 80, height: 80, background: '#e8f5e9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+          <CheckCircle size={40} style={{ color: '#4caf50' }} />
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 12px', textAlign: 'center' }}>تم إرسال رابط الاسترداد</h2>
+        <p style={{ fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', marginBottom: 28, lineHeight: 1.6 }}>
+          راجع بريدك الإلكتروني <strong>{email}</strong> واضغط على الرابط لتغيير كلمة المرور.
+        </p>
+        <button onClick={() => { setForgotMode(false); setResetSent(false); }} style={{ height: 48, padding: '0 28px', background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 14, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary }}>
+          العودة لتسجيل الدخول
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '0 24px', paddingTop: 60, background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column', direction: 'rtl' }}>
       <button onClick={() => nav('/welcome')} style={{ alignSelf: 'flex-start', marginBottom: 28, color: COLORS.textSecondary, lineHeight: 0 }}>
         <ArrowRight size={22} />
       </button>
-      <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.02em' }}>مرحباً بعودتك 👋</h2>
-      <p style={{ fontSize: 14, color: COLORS.textSecondary, margin: '0 0 32px' }}>سجل دخولك لحسابك في SoukPro</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <Input icon={Mail} type="email" placeholder="البريد الإلكتروني" value={email} onChange={(v) => { setEmail(v); setError(''); }} />
-        <Input icon={Lock} type="password" placeholder="كلمة المرور" value={password} onChange={(v) => { setPassword(v); setError(''); }} />
-        <button style={{ alignSelf: 'flex-end', fontSize: 13, color: COLORS.primary, fontWeight: 600 }}>نسيت كلمة المرور؟</button>
-      </div>
-      {error && <p style={{ color: '#e53935', fontSize: 13, marginTop: 12, textAlign: 'center' }}>{error}</p>}
-      <button
-        onClick={handleLogin}
-        disabled={loading}
-        style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-      >
-        {loading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
-        {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
-      </button>
-      <p style={{ textAlign: 'center', fontSize: 13, color: COLORS.textSecondary, marginTop: 20 }}>
-        ما عندكش حساب؟{' '}
-        <button onClick={() => nav('/register')} style={{ color: COLORS.primary, fontWeight: 700 }}>إنشاء حساب</button>
-      </p>
+
+      {forgotMode ? (
+        <>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.02em' }}>استرداد كلمة المرور</h2>
+          <p style={{ fontSize: 14, color: COLORS.textSecondary, margin: '0 0 32px' }}>أدخل بريدك الإلكتروني وسنرسل لك رابط التغيير</p>
+          <Input icon={Mail} type="email" placeholder="البريد الإلكتروني" value={email} onChange={(v) => { setEmail(v); setError(''); }} />
+          {error && <p style={{ color: '#e53935', fontSize: 13, marginTop: 12, textAlign: 'center' }}>{error}</p>}
+          <button
+            onClick={handleReset}
+            disabled={resetLoading}
+            style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: resetLoading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          >
+            {resetLoading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
+            {resetLoading ? 'جاري الإرسال...' : 'إرسال رابط الاسترداد'}
+          </button>
+          <button onClick={() => { setForgotMode(false); setError(''); }} style={{ marginTop: 16, fontSize: 13, color: COLORS.textSecondary, textAlign: 'center' }}>
+            رجوع لتسجيل الدخول
+          </button>
+        </>
+      ) : (
+        <>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.02em' }}>مرحباً بعودتك 👋</h2>
+          <p style={{ fontSize: 14, color: COLORS.textSecondary, margin: '0 0 32px' }}>سجل دخولك لحسابك في SoukPro</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Input icon={Mail} type="email" placeholder="البريد الإلكتروني" value={email} onChange={(v) => { setEmail(v); setError(''); }} />
+            <Input icon={Lock} type="password" placeholder="كلمة المرور" value={password} onChange={(v) => { setPassword(v); setError(''); }} />
+            <button onClick={() => { setForgotMode(true); setError(''); }} style={{ alignSelf: 'flex-end', fontSize: 13, color: COLORS.primary, fontWeight: 600 }}>
+              نسيت كلمة المرور؟
+            </button>
+          </div>
+          {error && <p style={{ color: '#e53935', fontSize: 13, marginTop: 12, textAlign: 'center' }}>{error}</p>}
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          >
+            {loading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
+            {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+          </button>
+          <p style={{ textAlign: 'center', fontSize: 13, color: COLORS.textSecondary, marginTop: 20 }}>
+            ما عندكش حساب؟{' '}
+            <button onClick={() => nav('/register')} style={{ color: COLORS.primary, fontWeight: 700 }}>إنشاء حساب</button>
+          </p>
+        </>
+      )}
     </div>
   );
 }

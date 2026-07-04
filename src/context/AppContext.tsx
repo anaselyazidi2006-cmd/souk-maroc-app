@@ -22,6 +22,7 @@ interface AppCtx {
   login: (email: string, password: string) => Promise<{ error: string | null }>;
   register: (name: string, email: string, password: string) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   logout: () => void;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
   activeCategory: string;
   setCategory: (c: string) => void;
   searchQuery: string;
@@ -116,6 +117,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const resetPassword = async (email: string): Promise<{ error: string | null }> => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) return { error: error.message };
+    return { error: null };
+  };
+
   const addToCart = (p: Product, qty = 1) =>
     setCart(prev => {
       const ex = prev.find(i => i.product.id === p.id);
@@ -162,7 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider value={{
-      user, isLoading, login, register, logout,
+      user, isLoading, login, register, logout, resetPassword,
       activeCategory, setCategory: setActiveCategory,
       searchQuery, setSearchQuery,
       cart, cartCount, cartTotal, addToCart, removeFromCart, updateQty, clearCart,

@@ -103,6 +103,7 @@ export function PostAdScreen() {
     setSubmitting(true);
     try {
       const row = {
+        user_id: user.id,
         title: title.trim(),
         description: desc.trim() || title.trim(),
         price: price ? Number(price) : null,
