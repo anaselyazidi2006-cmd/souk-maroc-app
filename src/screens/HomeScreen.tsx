@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, MapPin, Plus, Heart, MessageCircle, Share2, Eye, Phone, ExternalLink, ChevronDown } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { LISTING_TYPES, MOROCCAN_CITIES, LISTINGS } from '@/data';
+import { LISTING_TYPES, MOROCCAN_CITIES } from '@/data';
 import type { Listing } from '@/types';
 import { SearchBar } from '@/components/SearchBar';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
@@ -167,11 +167,8 @@ export function HomeScreen() {
       });
   }, []);
 
-  // Merge DB listings (first) with static demo data
-  const allListings: Listing[] = [
-    ...dbListings,
-    ...LISTINGS.filter(l => !dbListings.some(d => d.id === l.id)),
-  ];
+  // Only real Supabase data — no static merge
+  const allListings: Listing[] = dbListings;
 
   const sq = search.trim().toLowerCase();
   const filtered = allListings.filter(l => {

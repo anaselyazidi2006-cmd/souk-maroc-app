@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, X, MapPin, Heart, ExternalLink, ChevronDown } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import { LISTING_TYPES, LISTINGS } from '@/data';
+import { LISTING_TYPES } from '@/data';
 import type { Listing } from '@/types';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 import { supabase } from '@/lib/supabase';
@@ -103,10 +103,7 @@ export function SearchScreen() {
     });
   }, []);
 
-  const allListings: Listing[] = [
-    ...dbListings,
-    ...LISTINGS.filter(l => !dbListings.some(d => d.id === l.id)),
-  ];
+  const allListings: Listing[] = dbListings;
 
   const handleInput = (v: string) => { setInput(v); setSearchQuery(v); };
 

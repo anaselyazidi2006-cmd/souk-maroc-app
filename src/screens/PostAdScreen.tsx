@@ -126,6 +126,7 @@ export function PostAdScreen() {
       setStep(2);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'خطأ غير معروف';
+      console.error('[PostAd] insert error:', err);
       alert(`فشل في نشر الإعلان: ${msg}`);
     } finally {
       setSubmitting(false);

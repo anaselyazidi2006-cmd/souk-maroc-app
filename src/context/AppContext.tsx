@@ -104,6 +104,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { error: 'هذا البريد الإلكتروني مسجل مسبقاً' };
       return { error: error.message };
     }
+    // If a session is returned immediately, email confirmation is disabled — log the user in directly
+    if (data.session) return { error: null };
+    // If user exists but no session, email confirmation is required
     if (data.user && !data.session) return { error: null, needsConfirmation: true };
     return { error: null };
   };

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Heart, Share2, Phone, MessageCircle, MapPin, Eye, Send, Star } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
-import { LISTINGS } from '@/data';
 import type { Listing } from '@/types';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 import { supabase } from '@/lib/supabase';
@@ -43,17 +42,16 @@ export function ListingScreen() {
   const nav = useNavigate();
   const { toggleLike, isLiked, likeCounts, getComments, addComment, user } = useApp();
   const [commentText, setCommentText] = useState('');
-  const [listing, setListing] = useState<Listing | undefined>(() => LISTINGS.find(l => l.id === id));
-  const [loading, setLoading] = useState(!listing);
+  const [listing, setListing] = useState<Listing | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
-    if (listing) return;
+    if (!id) { setLoading(false); return; }
     supabase.from('listings').select('*').eq('id', id).maybeSingle().then(({ data }) => {
       if (data) setListing(mapRow(data as Record<string, unknown>));
       setLoading(false);
     });
-  }, [id, listing]);
+  }, [id]);
 
   if (loading) {
     return (
