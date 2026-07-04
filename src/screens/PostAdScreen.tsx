@@ -67,8 +67,9 @@ export function PostAdScreen() {
       const { data: { publicUrl } } = supabase.storage.from('listings').getPublicUrl(fileName);
       setUploadedImage(publicUrl);
       setImgIdx(-1);
-    } catch {
-      alert('فشل في رفع الصورة. يرجى المحاولة مرة أخرى.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`فشل في رفع الصورة: ${msg}`);
     } finally {
       setUploading(false);
     }
@@ -93,7 +94,9 @@ export function PostAdScreen() {
   const selectedImage = uploadedImage || SAMPLE_IMAGES[imgIdx];
   const typeLabel = TYPES.find(t => t.id === type)?.label ?? type;
 
-  const canSubmit = title.trim().length >= 3 && city && !submitting;
+  const PHONE_RE = /^\+?2126[0-9]{8}$|^06[0-9]{8}$|^07[0-9]{8}$/;
+  const phoneError = phone.trim() && !PHONE_RE.test(phone.replace(/\s/g, '')) ? 'رقم الهاتف غير صحيح (مثال: +212612345678)' : '';
+  const canSubmit = title.trim().length >= 3 && city && !submitting && !phoneError;
 
   const handleSubmit = async () => {
     if (!canSubmit || !user) return;
@@ -109,8 +112,8 @@ export function PostAdScreen() {
         category: 'handcraft',
         image: selectedImage,
         city,
-        phone: phone || '+212600000000',
-        whatsapp: phone || '+212600000000',
+        phone: phone.trim() || '+212600000000',
+        whatsapp: phone.trim() || '+212600000000',
         badge: 'new',
         user_name: user.name,
         user_avatar: user.avatar,
@@ -239,7 +242,8 @@ export function PostAdScreen() {
         </Field>
 
         <Field icon={Phone} label="رقم التواصل">
-          <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="+212 6XX XXX XXX" style={{ ...inputStyle }} />
+          <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="+212 6XX XXX XXX" style={{ ...inputStyle, borderColor: phoneError ? COLORS.error : COLORS.border }} />
+          {phoneError && <p style={{ fontSize: 11, color: COLORS.error, margin: '5px 0 0', paddingRight: 4 }}>{phoneError}</p>}
         </Field>
       </div>
 

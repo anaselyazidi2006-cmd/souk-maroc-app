@@ -43,10 +43,20 @@ function MyListingRow({ l }: { l: Listing }) {
   );
 }
 
+function useToast() {
+  const [msg, setMsg] = useState('');
+  const show = (m: string) => {
+    setMsg(m);
+    setTimeout(() => setMsg(''), 2500);
+  };
+  return { msg, show };
+}
+
 export function ProfileScreen() {
   const nav = useNavigate();
   const { user, wishlist, logout } = useApp();
   const [myListings, setMyListings] = useState<Listing[]>([]);
+  const toast = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -54,14 +64,16 @@ export function ProfileScreen() {
       .then(({ data }) => { if (data) setMyListings(data.map(r => mapRow(r as Record<string, unknown>))); });
   }, [user]);
 
+  const soon = () => toast.show('قريباً — هذه الخاصية قيد التطوير 🚧');
+
   const MENU = [
-    { icon: Package,    label: 'طلباتي',          sub: '3 طلبات نشطة',               action: () => {} },
+    { icon: Package,    label: 'طلباتي',          sub: '3 طلبات نشطة',               action: () => nav('/orders') },
     { icon: Heart,      label: 'المحفوظة',         sub: `${wishlist.length} منتج`,    action: () => nav('/wishlist') },
     { icon: Bell,       label: 'الإشعارات',        sub: 'التنبيهات والتذكيرات',       action: () => nav('/notifications') },
-    { icon: MapPin,     label: 'عناوين التوصيل',   sub: 'إدارة العناوين',             action: () => {} },
-    { icon: Settings,   label: 'إعدادات الحساب',   sub: 'كلمة السر، اللغة',           action: () => {} },
-    { icon: Shield,     label: 'الخصوصية والأمان', sub: 'تحكم في بياناتك',           action: () => {} },
-    { icon: HelpCircle, label: 'المساعدة والدعم',  sub: 'الأسئلة الشائعة',           action: () => {} },
+    { icon: MapPin,     label: 'عناوين التوصيل',   sub: 'إدارة العناوين',             action: soon },
+    { icon: Settings,   label: 'إعدادات الحساب',   sub: 'كلمة السر، اللغة',           action: soon },
+    { icon: Shield,     label: 'الخصوصية والأمان', sub: 'تحكم في بياناتك',           action: soon },
+    { icon: HelpCircle, label: 'المساعدة والدعم',  sub: 'الأسئلة الشائعة',           action: soon },
     { icon: Info,       label: 'حول SoukPro',      sub: 'قصتنا ومهمتنا',             action: () => nav('/about') },
   ];
 
@@ -165,6 +177,12 @@ export function ProfileScreen() {
       </button>
 
       <p style={{ textAlign: 'center', fontSize: 11, color: COLORS.textTertiary, padding: '16px 0 4px' }}>SoukPro v2.2.0 · صنع بـ ❤️ في المغرب 🇲🇦</p>
+
+      {toast.msg && (
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: COLORS.textPrimary, color: '#fff', fontSize: 13, fontWeight: 600, padding: '10px 20px', borderRadius: RADIUS.full, zIndex: 9999, boxShadow: SHADOW.lg, whiteSpace: 'nowrap', animation: 'fadeIn 0.2s ease' }}>
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 }
