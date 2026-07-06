@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
-import { Eye, EyeOff, ArrowRight, Mail, Lock, User, ShoppingBag, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Mail, Lock, User, ShoppingBag, CheckCircle, KeyRound } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 function Input({ icon: Icon, type, placeholder, value, onChange }: {
   icon: typeof Mail; type: string; placeholder: string; value: string; onChange: (v: string) => void;
@@ -235,6 +236,65 @@ export function RegisterScreen() {
         عندك حساب ديجا؟{' '}
         <button onClick={() => nav('/login')} style={{ color: COLORS.primary, fontWeight: 700 }}>سجل دخولك</button>
       </p>
+    </div>
+  );
+}
+
+export function ResetPasswordScreen() {
+  const nav = useNavigate();
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async () => {
+    if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+    if (password !== confirm) { setError('كلمتا المرور غير متطابقتين'); return; }
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setDone(true);
+    setTimeout(() => nav('/login', { replace: true }), 2500);
+  };
+
+  if (done) {
+    return (
+      <div style={{ background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', gap: 16 }}>
+        <div style={{ width: 80, height: 80, background: '#e8f5e9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CheckCircle size={40} style={{ color: '#4caf50' }} />
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: COLORS.textPrimary, margin: 0, textAlign: 'center' }}>تم تغيير كلمة المرور</h2>
+        <p style={{ fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', margin: 0 }}>سيتم توجيهك لتسجيل الدخول تلقائياً...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '0 24px', paddingTop: 60, background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column', direction: 'rtl' }}>
+      <button onClick={() => nav('/login')} style={{ alignSelf: 'flex-start', marginBottom: 28, color: COLORS.textSecondary, lineHeight: 0 }}>
+        <ArrowRight size={22} />
+      </button>
+      <div style={{ width: 56, height: 56, background: COLORS.primary100, borderRadius: RADIUS.xl, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <KeyRound size={26} style={{ color: COLORS.primary }} />
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.02em' }}>كلمة مرور جديدة</h2>
+      <p style={{ fontSize: 14, color: COLORS.textSecondary, margin: '0 0 32px' }}>اختر كلمة مرور قوية لحسابك</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Input icon={Lock} type="password" placeholder="كلمة المرور الجديدة" value={password} onChange={(v) => { setPassword(v); setError(''); }} />
+        <Input icon={Lock} type="password" placeholder="تأكيد كلمة المرور" value={confirm} onChange={(v) => { setConfirm(v); setError(''); }} />
+      </div>
+      {error && <p style={{ color: '#e53935', fontSize: 13, marginTop: 12, textAlign: 'center' }}>{error}</p>}
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        style={{ height: 52, background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary, marginTop: 24, opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+      >
+        {loading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />}
+        {loading ? 'جاري الحفظ...' : 'حفظ كلمة المرور'}
+      </button>
     </div>
   );
 }

@@ -40,7 +40,7 @@ const inputStyle: React.CSSProperties = {
 
 export function PostAdScreen() {
   const nav = useNavigate();
-  const { user } = useApp();
+  const { user, isLoading } = useApp();
   const [step, setStep] = useState(1);
   const [type, setType] = useState('sale');
   const [title, setTitle] = useState('');
@@ -133,6 +133,14 @@ export function PostAdScreen() {
       setSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div style={{ background: COLORS.background, minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 28, height: 28, border: `3px solid ${COLORS.border}`, borderTopColor: COLORS.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
 
   if (!user) {
     return (

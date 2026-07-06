@@ -75,7 +75,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // Let the ResetPasswordScreen handle updateUser — just navigate there
+        window.location.replace('/reset-password');
+        return;
+      }
       if (session?.user) {
         setUser(userFromSession(session.user));
       } else {

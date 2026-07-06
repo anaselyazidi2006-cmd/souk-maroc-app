@@ -157,14 +157,27 @@ export function HomeScreen() {
   const [loadingDB, setLoadingDB] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('listings')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data) setDbListings(data.map(mapRow));
-        setLoadingDB(false);
-      });
+    const fetchListings = () => {
+      supabase
+        .from('listings')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .then(({ data, error }) => {
+          if (!error && data) setDbListings(data.map(mapRow));
+          setLoadingDB(false);
+        });
+    };
+
+    fetchListings();
+
+    const channel = supabase
+      .channel('listings_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'listings' }, () => {
+        fetchListings();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Only real Supabase data — no static merge

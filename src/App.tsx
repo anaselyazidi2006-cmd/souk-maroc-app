@@ -17,8 +17,9 @@ const WishlistScreen  = lazy(() => import('./screens/WishlistScreen').then(m => 
 const ProfileScreen   = lazy(() => import('./screens/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
 const AboutScreen     = lazy(() => import('./screens/AboutScreen').then(m => ({ default: m.AboutScreen })));
 const PostAdScreen    = lazy(() => import('./screens/PostAdScreen').then(m => ({ default: m.PostAdScreen })));
-const NotificationsScreen = lazy(() => import('./screens/NotificationsScreen').then(m => ({ default: m.NotificationsScreen })));
-const OrdersScreen        = lazy(() => import('./screens/OrdersScreen').then(m => ({ default: m.OrdersScreen })));
+const NotificationsScreen  = lazy(() => import('./screens/NotificationsScreen').then(m => ({ default: m.NotificationsScreen })));
+const OrdersScreen         = lazy(() => import('./screens/OrdersScreen').then(m => ({ default: m.OrdersScreen })));
+const ResetPasswordScreen  = lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.ResetPasswordScreen })));
 
 const PHONE_W = 430;
 
@@ -30,7 +31,7 @@ function ScreenLoader() {
   );
 }
 
-const NO_TAB_PATHS = new Set(['/welcome', '/login', '/register', '/about', '/post_ad', '/notifications', '/orders']);
+const NO_TAB_PATHS = new Set(['/welcome', '/login', '/register', '/about', '/post_ad', '/notifications', '/orders', '/reset-password']);
 function needsTab(path: string) {
   return !NO_TAB_PATHS.has(path) && !path.startsWith('/product/') && !path.startsWith('/listing/');
 }
@@ -59,7 +60,8 @@ function RouterContent() {
             <Route path="/about"         element={<AboutScreen />} />
             <Route path="/post_ad"       element={<PostAdScreen />} />
             <Route path="/notifications" element={<NotificationsScreen />} />
-            <Route path="/orders"        element={<OrdersScreen />} />
+            <Route path="/orders"          element={<OrdersScreen />} />
+            <Route path="/reset-password"   element={<ResetPasswordScreen />} />
             <Route path="/"              element={user ? <Navigate to="/home" replace /> : <Navigate to="/welcome" replace />} />
             <Route path="*"              element={user ? <Navigate to="/home" replace /> : <Navigate to="/welcome" replace />} />
           </Routes>
