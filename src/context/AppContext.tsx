@@ -77,8 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-        // Let the ResetPasswordScreen handle updateUser — just navigate there
-        window.location.replace('/reset-password');
+        // PasswordRecoveryHandler in App.tsx will handle the redirect
         return;
       }
       if (session?.user) {

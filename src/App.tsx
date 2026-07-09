@@ -1,6 +1,6 @@
 import './index.css';
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { TabBar } from './components/TabBar';
 import { COLORS, RADIUS } from './theme';
@@ -36,6 +36,25 @@ function needsTab(path: string) {
   return !NO_TAB_PATHS.has(path) && !path.startsWith('/product/') && !path.startsWith('/listing/');
 }
 
+// Component to handle password recovery redirect from email link
+function PasswordRecoveryHandler() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    // Check if we have recovery tokens in the URL hash
+    if (hash && hash.includes('type=recovery') && pathname !== '/reset-password') {
+      // Navigate to reset-password while preserving the hash
+      window.history.replaceState(null, '', '/reset-password' + hash);
+      // Force a re-render by navigating
+      navigate('/reset-password', { replace: true });
+    }
+  }, [navigate, pathname]);
+
+  return null;
+}
+
 function RouterContent() {
   const { user, isLoading } = useApp();
   const { pathname } = useLocation();
@@ -44,6 +63,7 @@ function RouterContent() {
 
   return (
     <>
+      <PasswordRecoveryHandler />
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties}>
         <Suspense fallback={<ScreenLoader />}>
           <Routes>

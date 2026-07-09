@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
@@ -247,6 +247,65 @@ export function ResetPasswordScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [validSession, setValidSession] = useState(false);
+
+  // Verify we have a valid password recovery session
+  useEffect(() => {
+    let mounted = true;
+
+    const checkSession = async () => {
+      // First check if we have tokens in the URL hash
+      const hash = window.location.hash;
+      if (hash && hash.includes('access_token')) {
+        // Extract tokens from URL hash and set them
+        const params = new URLSearchParams(hash.substring(1)); // Remove the # character
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (accessToken && mounted) {
+          // Set the session using the tokens from URL
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+
+          if (!error && mounted) {
+            setValidSession(true);
+            setChecking(false);
+            return;
+          }
+
+          if (error && mounted) {
+            setError('رابط الاسترداد غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.');
+            setChecking(false);
+            return;
+          }
+        }
+      }
+
+      // Fallback: check if we already have a valid session
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (mounted) {
+        if (error) {
+          setError('رابط الاسترداد غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.');
+        } else if (session) {
+          setValidSession(true);
+        } else {
+          setError('رابط الاسترداد غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.');
+        }
+        setChecking(false);
+      }
+    };
+
+    // Add a small delay to ensure hash is available
+    const timer = setTimeout(checkSession, 100);
+
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
+  }, []);
 
   const handleSubmit = async () => {
     if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
@@ -259,6 +318,30 @@ export function ResetPasswordScreen() {
     setDone(true);
     setTimeout(() => nav('/login', { replace: true }), 2500);
   };
+
+  if (checking) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLORS.background }}>
+        <div style={{ width: 32, height: 32, border: `3px solid ${COLORS.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      </div>
+    );
+  }
+
+  // Show error screen if session is not valid
+  if (!validSession) {
+    return (
+      <div style={{ padding: '0 24px', background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', direction: 'rtl', gap: 16 }}>
+        <div style={{ width: 80, height: 80, background: '#ffebee', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <KeyRound size={40} style={{ color: '#e53935' }} />
+        </div>
+        <h2 style={{ fontSize: 22, fontWeight: 800, color: COLORS.textPrimary, margin: 0, textAlign: 'center' }}>رابط غير صالح</h2>
+        <p style={{ fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 1.6 }}>{error}</p>
+        <button onClick={() => nav('/login', { replace: true })} style={{ marginTop: 16, height: 48, padding: '0 28px', background: COLORS.primary, color: '#fff', fontWeight: 700, fontSize: 14, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary }}>
+          العودة لتسجيل الدخول
+        </button>
+      </div>
+    );
+  }
 
   if (done) {
     return (
@@ -283,7 +366,7 @@ export function ResetPasswordScreen() {
       <h2 style={{ fontSize: 26, fontWeight: 800, color: COLORS.textPrimary, margin: '0 0 6px', letterSpacing: '-0.02em' }}>كلمة مرور جديدة</h2>
       <p style={{ fontSize: 14, color: COLORS.textSecondary, margin: '0 0 32px' }}>اختر كلمة مرور قوية لحسابك</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <Input icon={Lock} type="password" placeholder="كلمة المرور الجديدة" value={password} onChange={(v) => { setPassword(v); setError(''); }} />
+        <Input icon={Lock} type="password" placeholder="كلمة المرور الجديدة" value={password} onChange={(v) => { setPassword(v); setConfirm(''); setError(''); }} />
         <Input icon={Lock} type="password" placeholder="تأكيد كلمة المرور" value={confirm} onChange={(v) => { setConfirm(v); setError(''); }} />
       </div>
       {error && <p style={{ color: '#e53935', fontSize: 13, marginTop: 12, textAlign: 'center' }}>{error}</p>}
