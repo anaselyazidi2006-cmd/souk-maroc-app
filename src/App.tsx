@@ -79,6 +79,7 @@ function RouterContent() {
             <Route path="/profile"       element={user ? <ProfileScreen /> : <Navigate to="/login" replace />} />
             <Route path="/about"         element={<AboutScreen />} />
             <Route path="/post_ad"       element={<PostAdScreen />} />
+            <Route path="/edit_listing/:id" element={<PostAdScreen />} />
             <Route path="/notifications" element={<NotificationsScreen />} />
             <Route path="/orders"          element={<OrdersScreen />} />
             <Route path="/reset-password"   element={<ResetPasswordScreen />} />

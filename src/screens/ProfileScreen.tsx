@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingBag, Heart, MapPin, Bell, Shield, HelpCircle, LogOut, ChevronRight, Star, Info, Settings, Plus, Phone, Package } from 'lucide-react';
+import { ShoppingBag, Heart, MapPin, Bell, Shield, HelpCircle, LogOut, ChevronRight, Star, Info, Settings, Plus, Phone, Package, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
@@ -22,14 +22,14 @@ function mapRow(r: Record<string, unknown>): Listing {
   };
 }
 
-function MyListingRow({ l }: { l: Listing }) {
+function MyListingRow({ l, onDelete }: { l: Listing; onDelete: (id: string) => void }) {
   const nav = useNavigate();
   return (
-    <div onClick={() => nav(`/listing/${l.id}`)} style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: `1px solid ${COLORS.borderLight}`, cursor: 'pointer' }}>
-      <div style={{ width: 56, height: 56, borderRadius: RADIUS.lg, overflow: 'hidden', flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 10, padding: '10px 0', borderBottom: `1px solid ${COLORS.borderLight}` }}>
+      <div onClick={() => nav(`/listing/${l.id}`)} style={{ width: 56, height: 56, borderRadius: RADIUS.lg, overflow: 'hidden', flexShrink: 0, cursor: 'pointer' }}>
         <img src={l.image} alt={l.title} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => nav(`/listing/${l.id}`)}>
         <p style={{ fontSize: 13, fontWeight: 700, color: COLORS.textPrimary, margin: '0 0 2px' }} className="line-clamp-1">{l.title}</p>
         <p style={{ fontSize: 12, fontWeight: 700, color: COLORS.primary, margin: '0 0 3px' }}>{l.priceLabel}</p>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -38,7 +38,14 @@ function MyListingRow({ l }: { l: Listing }) {
           <span style={{ fontSize: 10, color: COLORS.textTertiary }}>👁 {l.views}</span>
         </div>
       </div>
-      <ChevronRight size={15} style={{ color: COLORS.textTertiary, flexShrink: 0, marginTop: 20 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, marginTop: 8 }}>
+        <button onClick={(e) => { e.stopPropagation(); nav(`/edit_listing/${l.id}`); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: COLORS.primary100, border: `1px solid ${COLORS.primary200}`, borderRadius: RADIUS.md, cursor: 'pointer' }} title="تعديل">
+          <Pencil size={13} style={{ color: COLORS.primary }} />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(l.id); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: RADIUS.md, cursor: 'pointer' }} title="حذف">
+          <Trash2 size={13} style={{ color: COLORS.error }} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -144,7 +151,12 @@ export function ProfileScreen() {
             </button>
           </div>
         ) : (
-          myListings.map(l => <MyListingRow key={l.id} l={l} />)
+          myListings.map(l => <MyListingRow key={l.id} l={l} onDelete={async (lid) => {
+            if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
+            const { error } = await supabase.from('listings').delete().eq('id', lid);
+            if (error) { alert('فشل الحذف: ' + error.message); return; }
+            setMyListings(prev => prev.filter(x => x.id !== lid));
+          }} />)
         )}
       </div>
 

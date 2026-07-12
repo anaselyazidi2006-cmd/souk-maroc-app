@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Heart, Share2, Phone, MessageCircle, MapPin, Eye, Send, Star } from 'lucide-react';
+import { ArrowLeft, Heart, Share2, Phone, MessageCircle, MapPin, Eye, Send, Star, Pencil, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import type { Listing } from '@/types';
@@ -52,6 +52,16 @@ export function ListingScreen() {
       setLoading(false);
     });
   }, [id]);
+
+  const isOwner = !!(user && listing && user.id === listing.userId);
+
+  const handleDelete = async () => {
+    if (!listing) return;
+    if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    const { error } = await supabase.from('listings').delete().eq('id', listing.id);
+    if (error) { alert('فشل الحذف: ' + error.message); return; }
+    nav('/profile');
+  };
 
   if (loading) {
     return (
@@ -131,6 +141,17 @@ export function ListingScreen() {
         </div>
 
         <h1 style={{ fontSize: 20, fontWeight: 900, color: COLORS.textPrimary, margin: '0 0 8px', lineHeight: 1.3, letterSpacing: '-0.02em' }}>{listing.title}</h1>
+
+        {isOwner && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <button onClick={() => nav(`/edit_listing/${listing.id}`)} style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: COLORS.primary100, color: COLORS.primary, border: `1px solid ${COLORS.primary200}`, borderRadius: RADIUS.lg, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+              <Pencil size={14} /> تعديل
+            </button>
+            <button onClick={handleDelete} style={{ flex: 1, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: '#FEF2F2', color: COLORS.error, border: '1px solid #FECACA', borderRadius: RADIUS.lg, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+              <Trash2 size={14} /> حذف
+            </button>
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: COLORS.card, borderRadius: RADIUS.xl, boxShadow: SHADOW.sm, border: `1px solid ${COLORS.border}`, marginBottom: 14 }}>
           <div style={{ width: 46, height: 46, background: `linear-gradient(135deg,${COLORS.primary},${COLORS.primary700})`, borderRadius: RADIUS.full, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

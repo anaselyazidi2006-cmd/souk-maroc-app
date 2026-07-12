@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Camera, MapPin, Tag, FileText, Phone, ChevronDown, X, Upload } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { MOROCCAN_CITIES } from '@/data';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
@@ -40,6 +40,8 @@ const inputStyle: React.CSSProperties = {
 
 export function PostAdScreen() {
   const nav = useNavigate();
+  const { id: editId } = useParams<{ id: string }>();
+  const isEdit = !!editId;
   const { user, isLoading } = useApp();
   const [step, setStep] = useState(1);
   const [type, setType] = useState('sale');
@@ -54,7 +56,26 @@ export function PostAdScreen() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [newListingId, setNewListingId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(isEdit);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editId) return;
+    supabase.from('listings').select('*').eq('id', editId).maybeSingle().then(({ data }) => {
+      if (data) {
+        const r = data as Record<string, unknown>;
+        setType((r.type as string) || 'sale');
+        setTitle((r.title as string) || '');
+        setDesc((r.description as string) || '');
+        setPrice(r.price != null ? String(r.price) : '');
+        setCity((r.city as string) || 'Marrakech');
+        setPhone((r.phone as string) || '');
+        setUploadedImage((r.image as string) || null);
+        if (r.image) setImgIdx(-1);
+      }
+      setLoadingEdit(false);
+    });
+  }, [editId]);
 
   const uploadImage = async (file: File) => {
     if (!user) return;
@@ -103,7 +124,6 @@ export function PostAdScreen() {
     setSubmitting(true);
     try {
       const row = {
-        user_id: user.id,
         title: title.trim(),
         description: desc.trim() || title.trim(),
         price: price ? Number(price) : null,
@@ -115,26 +135,35 @@ export function PostAdScreen() {
         city,
         phone: phone.trim() || '+212600000000',
         whatsapp: phone.trim() || '+212600000000',
-        badge: 'new',
-        user_name: user.name,
-        user_avatar: user.avatar,
         user_city: city,
-        user_rating: user.rating || 4.5,
       };
-      const { data, error } = await supabase.from('listings').insert(row).select('id').single();
-      if (error) throw error;
-      setNewListingId(data.id as string);
+      if (isEdit && editId) {
+        const { error } = await supabase.from('listings').update(row).eq('id', editId);
+        if (error) throw error;
+        setNewListingId(editId);
+      } else {
+        const { data, error } = await supabase.from('listings').insert({
+          ...row,
+          user_id: user.id,
+          badge: 'new',
+          user_name: user.name,
+          user_avatar: user.avatar,
+          user_rating: user.rating || 4.5,
+        }).select('id').single();
+        if (error) throw error;
+        setNewListingId(data.id as string);
+      }
       setStep(2);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'خطأ غير معروف';
-      console.error('[PostAd] insert error:', err);
-      alert(`فشل في نشر الإعلان: ${msg}`);
+      console.error('[PostAd] error:', err);
+      alert(isEdit ? `فشل في تعديل الإعلان: ${msg}` : `فشل في نشر الإعلان: ${msg}`);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loadingEdit) {
     return (
       <div style={{ background: COLORS.background, minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: 28, height: 28, border: `3px solid ${COLORS.border}`, borderTopColor: COLORS.primary, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -158,12 +187,12 @@ export function PostAdScreen() {
     return (
       <div style={{ background: COLORS.background, minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', gap: 16 }}>
         <div style={{ width: 80, height: 80, background: '#F0FDF4', borderRadius: RADIUS.xxl, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🎉</div>
-        <h2 style={{ fontSize: 24, fontWeight: 900, color: COLORS.textPrimary, margin: 0, textAlign: 'center', letterSpacing: '-0.03em' }}>تم نشر إعلانك!</h2>
+        <h2 style={{ fontSize: 24, fontWeight: 900, color: COLORS.textPrimary, margin: 0, textAlign: 'center', letterSpacing: '-0.03em' }}>{isEdit ? 'تم تعديل إعلانك!' : 'تم نشر إعلانك!'}</h2>
         <p style={{ fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', margin: 0, lineHeight: 1.6 }}>
-          إعلانك محفوظ في قاعدة البيانات وسيظهر في الصفحة الرئيسية.
+          {isEdit ? 'تم حفظ التعديلات بنجاح.' : 'إعلانك محفوظ في قاعدة البيانات وسيظهر في الصفحة الرئيسية.'}
         </p>
         <button onClick={() => { if (newListingId) nav(`/listing/${newListingId}`); else nav('/home'); }} style={{ height: 52, padding: '0 40px', background: COLORS.primary, color: '#fff', fontWeight: 800, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: SHADOW.primary }}>
-          شوف إعلاني
+          {isEdit ? 'شوف الإعلان' : 'شوف إعلاني'}
         </button>
         <button onClick={() => nav('/home')} style={{ fontSize: 13, color: COLORS.textTertiary }}>الصفحة الرئيسية</button>
       </div>
@@ -178,8 +207,8 @@ export function PostAdScreen() {
             <ArrowLeft size={18} style={{ color: COLORS.textPrimary }} />
           </button>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: COLORS.textPrimary, margin: 0, letterSpacing: '-0.03em' }}>🚀 نشر سريع</h1>
-            <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: 0 }}>أضف إعلانك في 10 ثواني</p>
+            <h1 style={{ fontSize: 20, fontWeight: 900, color: COLORS.textPrimary, margin: 0, letterSpacing: '-0.03em' }}>{isEdit ? '✏️ تعديل الإعلان' : '🚀 نشر سريع'}</h1>
+            <p style={{ fontSize: 12, color: COLORS.textSecondary, margin: 0 }}>{isEdit ? 'عدّل تفاصيل إعلانك' : 'أضف إعلانك في 10 ثواني'}</p>
           </div>
         </div>
       </div>
@@ -260,7 +289,7 @@ export function PostAdScreen() {
       <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 430, background: COLORS.card, borderTop: `1px solid ${COLORS.border}`, padding: '12px 16px', zIndex: 100 }}>
         <button onClick={handleSubmit} disabled={!canSubmit} style={{ width: '100%', height: 52, background: canSubmit ? COLORS.primary : COLORS.border, color: '#fff', fontWeight: 900, fontSize: 15, borderRadius: RADIUS.lg, boxShadow: canSubmit ? SHADOW.primary : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           {submitting ? <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : '🚀'}
-          {submitting ? 'جاري النشر...' : 'نشر الإعلان مجاناً'}
+          {submitting ? (isEdit ? 'جاري الحفظ...' : 'جاري النشر...') : (isEdit ? 'حفظ التعديلات' : 'نشر الإعلان مجاناً')}
         </button>
       </div>
     </div>
