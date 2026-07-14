@@ -1,82 +1,43 @@
+/* ─── SoukPro Design Tokens ─────────────────────────────────────────────── */
+
 export const COLORS = {
-  // Brand
-  primary:   '#E8572A',   // warm orange-red (Moroccan terracotta)
-  primary100:'#FFF1EC',
-  primary200:'#FFD6C8',
-  primary300:'#FFB49A',
-  primary700:'#C43E18',
+  /* Brand */
+  primary:     '#FF6B00',
+  primary700:  '#E55A00',
+  primary100:  '#FFF3E8',
+  primary200:  '#FFD9B3',
 
-  // Semantic
-  success:   '#22C55E',
-  warning:   '#F59E0B',
-  error:     '#EF4444',
-  info:      '#3B82F6',
+  /* Backgrounds */
+  background:  '#F8F7F4',
+  card:        '#FFFFFF',
+  cardAlt:     '#F4F3F0',
 
-  // Backgrounds
-  background:    '#F6F6F9',
-  card:          '#FFFFFF',
-  cardAlt:       '#F1F1F5',
-  surface:       '#FAFAFA',
+  /* Text */
+  textPrimary:   '#1A1A1A',
+  textSecondary: '#5C5C5C',
+  textTertiary:  '#9E9E9E',
 
-  // Text
-  textPrimary:   '#111318',
-  textSecondary: '#6B6F80',
-  textTertiary:  '#9FA3B4',
-  textInverse:   '#FFFFFF',
+  /* Borders */
+  border:      '#E8E6E1',
 
-  // Borders
-  border:        '#E8E9EE',
-  borderLight:   '#F0F1F5',
-
-  // Overlays
-  overlay:       'rgba(0,0,0,0.45)',
-  overlayLight:  'rgba(0,0,0,0.18)',
-
-  // Star rating
-  star:          '#F59E0B',
-  starEmpty:     '#DDE0EA',
-
-  // Tab bar
-  tabActive:     '#E8572A',
-  tabInactive:   '#B0B3C5',
-
-  // Badge
-  badge:         '#E8572A',
-} as const;
-
-export const SPACING = {
-  xs:  4,
-  sm:  8,
-  md:  12,
-  lg:  16,
-  xl:  20,
-  xxl: 24,
-  xxxl:32,
-} as const;
+  /* Semantic */
+  error:  '#DC2626',
+  star:   '#F59E0B',
+  success:'#16A34A',
+};
 
 export const RADIUS = {
-  sm:  8,
-  md:  12,
-  lg:  16,
-  xl:  20,
-  xxl: 28,
-  full: 9999,
-} as const;
-
-export const FONT_SIZE = {
-  xs:   11,
-  sm:   13,
-  base: 15,
-  md:   16,
-  lg:   18,
-  xl:   22,
-  xxl:  26,
-  xxxl: 32,
-} as const;
+  none:  '0px',
+  sm:    '6px',
+  md:    '10px',
+  lg:    '14px',
+  xl:    '18px',
+  '2xl': '24px',
+  full:  '9999px',
+};
 
 export const SHADOW = {
-  sm:  '0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.05)',
-  md:  '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05)',
-  lg:  '0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06)',
-  primary: '0 8px 24px rgba(232,87,42,0.28)',
-} as const;
+  sm: '0 1px 4px rgba(0,0,0,0.07)',
+  md: '0 4px 16px rgba(0,0,0,0.10)',
+  lg: '0 8px 32px rgba(0,0,0,0.14)',
+};
