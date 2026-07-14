@@ -222,6 +222,15 @@ import { useApp } from '@/context/AppContext';
 - **Strict mode:** Partially relaxed — `noUnusedLocals` and `noUnusedParameters` are `false` in `tsconfig.app.json` (rapid development mode)
 - `skipLibCheck: true` to avoid type errors in node_modules
 
+### Build & CI Requirements
+- The production build (`npm run build`) runs `tsc -b` (full type-check) **before** Vite bundling. **TypeScript errors will fail the Vercel deployment.** All type errors must be resolved before merging to main.
+- Common sources of build-breaking type errors to watch for:
+  - Missing or incorrect properties on Supabase query result types
+  - Mismatched types between `types.ts` interfaces and actual Supabase row shapes
+  - Implicit `any` in event handlers or async callbacks
+  - Unused imports that may conflict with strict future configs
+- When fixing type errors, prefer **type assertions** (`as`) or **type narrowing** (guards, optional chaining) over loosening the TypeScript configuration further.
+
 ### ESLint Configuration
 - Uses flat config format (`eslint.config.js`)
 - Plugins: `typescript-eslint`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`
@@ -238,6 +247,7 @@ import { useApp } from '@/context/AppContext';
   - **Delete:** `supabase.from('listings').delete().eq('id', id).eq('user_id', user.id)`
   - Both operations double-filter by `user_id` on the client in addition to RLS for defense-in-depth.
 - All Supabase calls should use the client from `src/lib/supabase.ts`.
+- **Supabase query result typing:** When accessing data from Supabase query results, be explicit about the expected shape. The `data` returned from `.select()` queries is typed as an array; always check for `null`/`undefined` before accessing properties. Avoid relying on inferred types from the generic Supabase client when the schema is manually defined — cast or assert as needed.
 
 ---
 
@@ -267,3 +277,4 @@ import { useApp } from '@/context/AppContext';
 8. **Edit mode via query param** — `PostAdScreen` detects edit mode through the `edit` query parameter (`?edit=:id`). When building navigation to edit a listing, use `navigate('/post_ad?edit=' + id)` rather than a separate route.
 9. **Destructive action confirmation** — Always use inline UI confirmation (local state toggle) for destructive actions; never use `window.confirm()` or `window.alert()`.
 10. **Owner-only mutations** — Edit/delete UI controls must only be rendered when the current authenticated user's `id` matches the listing's `user_id`. Always verify ownership both in the UI (conditional render) and in the Supabase query (`.eq('user_id', user.id)`).
+11. **TypeScript errors block production builds** — The `tsc -b` step in `npm run build` is a hard gate for Vercel deployments. Any TypeScript error — including type mismatches on Supabase results, implicit `any`, or incorrect interface usage — will prevent deployment. Always
