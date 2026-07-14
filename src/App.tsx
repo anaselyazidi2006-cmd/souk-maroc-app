@@ -1,117 +1,120 @@
-import './index.css';
-import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { AppProvider, useApp } from './context/AppContext';
-import { TabBar } from './components/TabBar';
+import React, { Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { AppProvider } from '@/context/AppContext';
+import { TabBar } from '@/components/TabBar';
 import { COLORS, RADIUS } from './theme';
 
-const WelcomeScreen   = lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.WelcomeScreen })));
-const LoginScreen     = lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.LoginScreen })));
-const RegisterScreen  = lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.RegisterScreen })));
-const HomeScreen      = lazy(() => import('./screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
-const ProductScreen   = lazy(() => import('./screens/ProductScreen').then(m => ({ default: m.ProductScreen })));
-const ListingScreen   = lazy(() => import('./screens/ListingScreen').then(m => ({ default: m.ListingScreen })));
-const SearchScreen    = lazy(() => import('./screens/SearchScreen').then(m => ({ default: m.SearchScreen })));
-const CartScreen      = lazy(() => import('./screens/CartScreen').then(m => ({ default: m.CartScreen })));
-const WishlistScreen  = lazy(() => import('./screens/WishlistScreen').then(m => ({ default: m.WishlistScreen })));
-const ProfileScreen   = lazy(() => import('./screens/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
-const AboutScreen     = lazy(() => import('./screens/AboutScreen').then(m => ({ default: m.AboutScreen })));
-const PostAdScreen    = lazy(() => import('./screens/PostAdScreen').then(m => ({ default: m.PostAdScreen })));
-const NotificationsScreen  = lazy(() => import('./screens/NotificationsScreen').then(m => ({ default: m.NotificationsScreen })));
-const OrdersScreen         = lazy(() => import('./screens/OrdersScreen').then(m => ({ default: m.OrdersScreen })));
-const ResetPasswordScreen  = lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.ResetPasswordScreen })));
+/* ─── Lazy screen imports ──────────────────────────────────────────────── */
+const WelcomeScreen      = React.lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.WelcomeScreen })));
+const LoginScreen        = React.lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.LoginScreen })));
+const RegisterScreen     = React.lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.RegisterScreen })));
+const ResetPasswordScreen= React.lazy(() => import('./screens/AuthScreens').then(m => ({ default: m.ResetPasswordScreen })));
+const HomeScreen         = React.lazy(() => import('./screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
+const ProductScreen      = React.lazy(() => import('./screens/ProductScreen').then(m => ({ default: m.ProductScreen })));
+const ListingScreen      = React.lazy(() => import('./screens/ListingScreen').then(m => ({ default: m.ListingScreen })));
+const EditListingScreen  = React.lazy(() => import('./screens/EditListingScreen').then(m => ({ default: m.EditListingScreen })));
+const SearchScreen       = React.lazy(() => import('./screens/SearchScreen').then(m => ({ default: m.SearchScreen })));
+const CartScreen         = React.lazy(() => import('./screens/CartScreen').then(m => ({ default: m.CartScreen })));
+const WishlistScreen     = React.lazy(() => import('./screens/WishlistScreen').then(m => ({ default: m.WishlistScreen })));
+const ProfileScreen      = React.lazy(() => import('./screens/ProfileScreen').then(m => ({ default: m.ProfileScreen })));
+const AboutScreen        = React.lazy(() => import('./screens/AboutScreen').then(m => ({ default: m.AboutScreen })));
+const PostAdScreen       = React.lazy(() => import('./screens/PostAdScreen').then(m => ({ default: m.PostAdScreen })));
+const NotificationsScreen= React.lazy(() => import('./screens/NotificationsScreen').then(m => ({ default: m.NotificationsScreen })));
+const OrdersScreen       = React.lazy(() => import('./screens/OrdersScreen').then(m => ({ default: m.OrdersScreen })));
 
-const PHONE_W = 430;
+/* ─── Constants ────────────────────────────────────────────────────────── */
+export const PHONE_W = 430;
 
+const NO_TAB_PATHS = new Set([
+  '/welcome', '/login', '/register', '/reset-password',
+  '/about', '/post_ad', '/notifications', '/orders',
+]);
+
+function needsTab(path: string) {
+  if (NO_TAB_PATHS.has(path)) return false;
+  if (path.startsWith('/product/')) return false;
+  if (path.startsWith('/listing/')) return false;
+  if (path.startsWith('/edit_listing/')) return false;
+  return true;
+}
+
+/* ─── Spinner (Suspense fallback) ──────────────────────────────────────── */
 function ScreenLoader() {
   return (
-    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLORS.background, minHeight: 200 }}>
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: COLORS.background, minHeight: '100vh' }}>
       <div style={{ width: 32, height: 32, border: `3px solid ${COLORS.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
     </div>
   );
 }
 
-const NO_TAB_PATHS = new Set(['/welcome', '/login', '/register', '/about', '/post_ad', '/notifications', '/orders', '/reset-password']);
-function needsTab(path: string) {
-  return !NO_TAB_PATHS.has(path) && !path.startsWith('/product/') && !path.startsWith('/listing/');
-}
-
-// Component to handle password recovery redirect from email link
+/* ─── Password recovery handler ────────────────────────────────────────── */
 function PasswordRecoveryHandler() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-
+  const nav = useNavigate();
   useEffect(() => {
     const hash = window.location.hash;
-    // Check if we have recovery tokens in the URL hash
-    if (hash && hash.includes('type=recovery') && pathname !== '/reset-password') {
-      // Navigate to reset-password while preserving the hash
-      window.history.replaceState(null, '', '/reset-password' + hash);
-      // Force a re-render by navigating
-      navigate('/reset-password', { replace: true });
+    if (hash.includes('type=recovery')) {
+      nav('/reset-password' + hash);
     }
-  }, [navigate, pathname]);
-
+  }, [nav]);
   return null;
 }
 
-function RouterContent() {
-  const { user, isLoading } = useApp();
-  const { pathname } = useLocation();
-
-  if (isLoading) return <ScreenLoader />;
+/* ─── Inner app (has access to router context) ─────────────────────────── */
+function AppInner() {
+  const location = useLocation();
+  const showTab  = needsTab(location.pathname);
 
   return (
-    <>
-      <PasswordRecoveryHandler />
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'none' } as React.CSSProperties}>
+    <div style={{
+      width: '100%', minHeight: '100vh',
+      background: '#0f0f0f',
+      display: 'flex', justifyContent: 'center',
+    }}>
+      <div style={{
+        width: '100%', maxWidth: PHONE_W,
+        minHeight: '100vh',
+        background: COLORS.background,
+        position: 'relative',
+        display: 'flex', flexDirection: 'column',
+        borderRadius: RADIUS.none,
+        overflow: 'hidden',
+      }}>
+        <PasswordRecoveryHandler />
         <Suspense fallback={<ScreenLoader />}>
           <Routes>
-            <Route path="/welcome"       element={<WelcomeScreen />} />
-            <Route path="/login"         element={<LoginScreen />} />
-            <Route path="/register"      element={<RegisterScreen />} />
-            <Route path="/home"          element={user ? <HomeScreen /> : <Navigate to="/welcome" replace />} />
+            <Route path="/welcome"        element={<WelcomeScreen />} />
+            <Route path="/login"          element={<LoginScreen />} />
+            <Route path="/register"       element={<RegisterScreen />} />
+            <Route path="/reset-password" element={<ResetPasswordScreen />} />
+            <Route path="/"              element={<HomeScreen />} />
             <Route path="/product/:id"   element={<ProductScreen />} />
             <Route path="/listing/:id"   element={<ListingScreen />} />
+            <Route path="/edit_listing/:id" element={<EditListingScreen />} />
             <Route path="/search"        element={<SearchScreen />} />
             <Route path="/cart"          element={<CartScreen />} />
             <Route path="/wishlist"      element={<WishlistScreen />} />
-            <Route path="/profile"       element={user ? <ProfileScreen /> : <Navigate to="/login" replace />} />
+            <Route path="/profile"       element={<ProfileScreen />} />
             <Route path="/about"         element={<AboutScreen />} />
             <Route path="/post_ad"       element={<PostAdScreen />} />
-            <Route path="/edit_listing/:id" element={<PostAdScreen />} />
             <Route path="/notifications" element={<NotificationsScreen />} />
-            <Route path="/orders"          element={<OrdersScreen />} />
-            <Route path="/reset-password"   element={<ResetPasswordScreen />} />
-            <Route path="/"              element={user ? <Navigate to="/home" replace /> : <Navigate to="/welcome" replace />} />
-            <Route path="*"              element={user ? <Navigate to="/home" replace /> : <Navigate to="/welcome" replace />} />
+            <Route path="/orders"        element={<OrdersScreen />} />
+            {/* Fallback */}
+            <Route path="*"              element={<HomeScreen />} />
           </Routes>
         </Suspense>
+        {showTab && <TabBar />}
       </div>
-      {needsTab(pathname) && <TabBar />}
-    </>
+    </div>
   );
 }
 
+/* ─── Root export ──────────────────────────────────────────────────────── */
 export default function App() {
   return (
-    <div style={{
-      display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
-      minHeight: '100dvh', background: '#0f0f0f',
-    }}>
-      <div style={{
-        width: PHONE_W, maxWidth: '100vw', minHeight: '100dvh',
-        background: COLORS.background,
-        boxShadow: '0 0 0 1px rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.5)',
-        borderRadius: `clamp(0px, (100vw - ${PHONE_W}px) * 999, ${RADIUS.xxl}px)`,
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }}>
-        <BrowserRouter>
-          <AppProvider>
-            <RouterContent />
-          </AppProvider>
-        </BrowserRouter>
-      </div>
-    </div>
+    <AppProvider>
+      <BrowserRouter>
+        <AppInner />
+      </BrowserRouter>
+    </AppProvider>
   );
 }
