@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0f0f0f;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100dvh;
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Utilities ─────────────────────────────────────────────────────────────── */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
