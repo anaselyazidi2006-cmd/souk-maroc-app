@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 import type { Listing } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { FollowStats } from '@/components/FollowButton';
 
 function mapRow(r: Record<string, unknown>): Listing {
   return {
@@ -97,7 +98,7 @@ export function ProfileScreen() {
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: '0 0 2px', letterSpacing: '-0.02em' }}>{user?.name ?? 'ضيف'}</h2>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', margin: '0 0 4px' }}>{user?.email ?? 'مش مسجل'}</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: 'rgba(255,255,255,0.18)', padding: '3px 8px', borderRadius: RADIUS.full }}>
                 <Star size={10} style={{ fill: '#FFD700', color: '#FFD700' }} />
                 <span style={{ fontSize: 11, fontWeight: 800, color: '#fff' }}>{user?.rating?.toFixed(1) ?? '—'}</span>
@@ -109,6 +110,11 @@ export function ProfileScreen() {
                 </div>
               )}
             </div>
+            {user && (
+              <div style={{ marginTop: 8 }}>
+                <FollowStats userId={user.id} onWhite={false} />
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <button style={{ fontSize: 11, fontWeight: 800, color: COLORS.primary, background: '#fff', padding: '6px 12px', borderRadius: RADIUS.md }}>تعديل</button>

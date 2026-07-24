@@ -5,6 +5,8 @@ import { useApp } from '@/context/AppContext';
 import type { Listing } from '@/types';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 import { supabase } from '@/lib/supabase';
+import { PostOptionsMenu } from '@/components/PostOptionsMenu';
+import { FollowButton, FollowStats } from '@/components/FollowButton';
 
 const TYPE_COLORS: Record<string, string> = {
   sale: '#16A34A', service: COLORS.primary, job: '#7C3AED', rent: '#0284C7',
@@ -115,6 +117,11 @@ export function ListingScreen() {
             <button onClick={handleShare} style={{ width: 38, height: 38, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(6px)', borderRadius: RADIUS.md, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: SHADOW.sm }}>
               <Share2 size={16} style={{ color: COLORS.textPrimary }} />
             </button>
+            <PostOptionsMenu
+              isOwner={isOwner}
+              onEdit={() => nav(`/edit_listing/${listing.id}`)}
+              onDelete={handleDelete}
+            />
           </div>
         </div>
         <div style={{ position: 'absolute', bottom: 14, left: 16 }}>
@@ -153,22 +160,28 @@ export function ListingScreen() {
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: COLORS.card, borderRadius: RADIUS.xl, boxShadow: SHADOW.sm, border: `1px solid ${COLORS.border}`, marginBottom: 14 }}>
-          <div style={{ width: 46, height: 46, background: `linear-gradient(135deg,${COLORS.primary},${COLORS.primary700})`, borderRadius: RADIUS.full, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{listing.userAvatar}</span>
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: COLORS.textPrimary }}>{listing.userName}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Star size={10} style={{ fill: COLORS.star, color: COLORS.star }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary }}>{listing.userRating}</span>
+        <div style={{ padding: '14px 16px', background: COLORS.card, borderRadius: RADIUS.xl, boxShadow: SHADOW.sm, border: `1px solid ${COLORS.border}`, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 46, height: 46, background: `linear-gradient(135deg,${COLORS.primary},${COLORS.primary700})`, borderRadius: RADIUS.full, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontSize: 18, fontWeight: 900, color: '#fff' }}>{listing.userAvatar}</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: COLORS.textPrimary }}>{listing.userName}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Star size={10} style={{ fill: COLORS.star, color: COLORS.star }} />
+                  <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.textSecondary }}>{listing.userRating}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                <MapPin size={10} style={{ color: COLORS.textTertiary }} />
+                <span style={{ fontSize: 12, color: COLORS.textTertiary }}>{listing.city}</span>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <MapPin size={10} style={{ color: COLORS.textTertiary }} />
-              <span style={{ fontSize: 12, color: COLORS.textTertiary }}>{listing.city}</span>
-            </div>
+            <FollowButton targetUserId={listing.userId} currentUserId={user?.id} />
+          </div>
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${COLORS.borderLight}` }}>
+            <FollowStats userId={listing.userId} onWhite={true} />
           </div>
         </div>
 

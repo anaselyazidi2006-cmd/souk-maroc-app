@@ -213,6 +213,26 @@ export function PostAdScreen() {
         </div>
       </div>
 
+      {/* Commerce-Only Rule Banner */}
+      <div style={{
+        margin: '14px 16px 0',
+        background: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)',
+        border: '1.5px solid #FCD34D',
+        borderRadius: RADIUS.xl,
+        padding: '12px 14px',
+        display: 'flex', gap: 10, alignItems: 'flex-start',
+      }}>
+        <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>🛒</span>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 800, color: '#92400E', margin: '0 0 3px' }}>
+            منصة تجارية حصرياً
+          </p>
+          <p style={{ fontSize: 11, color: '#78350F', margin: 0, lineHeight: 1.6 }}>
+            هذه المنصة مخصصة للبيع والشراء فقط. المحتوى غير التجاري سيتم إزالته.
+          </p>
+        </div>
+      </div>
+
       <div style={{ padding: '20px 16px 0' }}>
         <Field icon={Tag} label="نوع الإعلان">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
