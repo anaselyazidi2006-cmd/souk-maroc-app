@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { UserPlus, UserMinus } from 'lucide-react';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 
-// Simple localStorage-based follow system (no backend needed for now)
 function getFollowing(): string[] {
   try { return JSON.parse(localStorage.getItem('soukpro_following') || '[]'); }
   catch { return []; }
@@ -10,12 +9,14 @@ function getFollowing(): string[] {
 function saveFollowing(ids: string[]) {
   try { localStorage.setItem('soukpro_following', JSON.stringify(ids)); } catch {}
 }
-
 function getFollowerCount(userId: string): number {
   try {
     const counts = JSON.parse(localStorage.getItem('soukpro_follower_counts') || '{}') as Record<string, number>;
-    return counts[userId] ?? Math.floor(Math.random() * 200 + 10);
-  } catch { return 0; }
+    if (counts[userId] !== undefined) return counts[userId];
+    // stable seed from userId chars
+    const seed = userId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return (seed % 190) + 10;
+  } catch { return 12; }
 }
 function setFollowerCount(userId: string, count: number) {
   try {
@@ -25,27 +26,31 @@ function setFollowerCount(userId: string, count: number) {
   } catch {}
 }
 
-interface Props {
-  targetUserId: string;
+interface FollowButtonProps {
+  targetUserId?: string | null;
   currentUserId?: string | null;
   compact?: boolean;
 }
 
-export function FollowButton({ targetUserId, currentUserId, compact = false }: Props) {
+export function FollowButton({ targetUserId, currentUserId, compact = false }: FollowButtonProps) {
   const [following, setFollowing] = useState<string[]>([]);
   const [followerCount, setFollowerCountState] = useState(0);
 
   useEffect(() => {
-    const f = getFollowing();
-    setFollowing(f);
+    if (!targetUserId) return;
+    setFollowing(getFollowing());
     setFollowerCountState(getFollowerCount(targetUserId));
   }, [targetUserId]);
+
+  // Don't render if no target or same user
+  if (!targetUserId) return null;
+  if (currentUserId && currentUserId === targetUserId) return null;
 
   const isFollowing = following.includes(targetUserId);
 
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!currentUserId) return;
+    if (!currentUserId || !targetUserId) return;
     const updated = isFollowing
       ? following.filter(id => id !== targetUserId)
       : [...following, targetUserId];
@@ -56,20 +61,18 @@ export function FollowButton({ targetUserId, currentUserId, compact = false }: P
     setFollowerCountState(newCount);
   };
 
-  // Don't show follow button for own posts
-  if (currentUserId && currentUserId === targetUserId) return null;
-
   if (compact) {
     return (
       <button
         onClick={toggle}
         style={{
           fontSize: 11, fontWeight: 800, padding: '4px 10px',
-          borderRadius: RADIUS.full, cursor: currentUserId ? 'pointer' : 'default',
+          borderRadius: RADIUS.full,
+          cursor: currentUserId ? 'pointer' : 'default',
           background: isFollowing ? COLORS.cardAlt : COLORS.primary,
           color: isFollowing ? COLORS.textSecondary : '#fff',
           border: isFollowing ? `1.5px solid ${COLORS.border}` : 'none',
-          transition: 'all 0.2s',
+          transition: 'all 0.2s', flexShrink: 0,
         }}
       >
         {isFollowing ? 'متابَع' : 'متابعة'}
@@ -86,9 +89,10 @@ export function FollowButton({ targetUserId, currentUserId, compact = false }: P
         background: isFollowing ? COLORS.cardAlt : COLORS.primary,
         color: isFollowing ? COLORS.textSecondary : '#fff',
         border: isFollowing ? `1.5px solid ${COLORS.border}` : 'none',
-        fontSize: 13, fontWeight: 800, cursor: currentUserId ? 'pointer' : 'default',
+        fontSize: 13, fontWeight: 800,
+        cursor: currentUserId ? 'pointer' : 'default',
         boxShadow: isFollowing ? 'none' : SHADOW.primary,
-        transition: 'all 0.2s',
+        transition: 'all 0.2s', flexShrink: 0,
       }}
       onMouseEnter={e => { if (currentUserId) e.currentTarget.style.opacity = '0.85'; }}
       onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
@@ -101,23 +105,25 @@ export function FollowButton({ targetUserId, currentUserId, compact = false }: P
   );
 }
 
-interface StatsProps {
-  userId: string;
+interface FollowStatsProps {
+  userId?: string | null;
   onWhite?: boolean;
 }
 
-export function FollowStats({ userId, onWhite = true }: StatsProps) {
+export function FollowStats({ userId, onWhite = true }: FollowStatsProps) {
   const [followers, setFollowers] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
+    if (!userId) return;
     setFollowers(getFollowerCount(userId));
-    const f = getFollowing();
-    setFollowingCount(f.length);
+    setFollowingCount(getFollowing().length);
   }, [userId]);
 
-  const numColor  = onWhite ? COLORS.textPrimary : '#fff';
-  const lblColor  = onWhite ? COLORS.textTertiary : 'rgba(255,255,255,0.75)';
+  if (!userId) return null;
+
+  const numColor = onWhite ? COLORS.textPrimary : '#fff';
+  const lblColor = onWhite ? COLORS.textTertiary : 'rgba(255,255,255,0.75)';
 
   return (
     <div style={{ display: 'flex', gap: 20 }}>
