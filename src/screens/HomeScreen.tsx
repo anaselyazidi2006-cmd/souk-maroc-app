@@ -7,8 +7,6 @@ import type { Listing } from '@/types';
 import { SearchBar } from '@/components/SearchBar';
 import { COLORS, RADIUS, SHADOW } from '@/theme';
 import { supabase } from '@/lib/supabase';
-import { PostOptionsMenu } from '@/components/PostOptionsMenu';
-import { FollowButton } from '@/components/FollowButton';
 
 const TYPE_COLORS: Record<string, string> = {
   sale: '#16A34A', service: COLORS.primary, job: '#7C3AED', rent: '#0284C7',
@@ -57,8 +55,7 @@ function BannerAd() {
 
 function ListingCard({ listing }: { listing: Listing }) {
   const nav = useNavigate();
-  const { toggleLike, isLiked, likeCounts, user } = useApp();
-  const isOwner = !!(user && listing.userId && user.id === listing.userId);
+  const { toggleLike, isLiked, likeCounts } = useApp();
   const liked     = isLiked(listing.id);
   const likeCount = likeCounts[listing.id] ?? listing.likes;
   const badgeCfg  = listing.badge ? BADGE_STYLE[listing.badge] : null;
@@ -103,17 +100,6 @@ function ListingCard({ listing }: { listing: Listing }) {
             <span style={{ fontSize: 10, fontWeight: 800, background: badgeCfg.bg, color: badgeCfg.text, padding: '3px 8px', borderRadius: RADIUS.full }}>{badgeCfg.label}</span>
           )}
           <span style={{ fontSize: 10, fontWeight: 700, background: typeColor + '18', color: typeColor, padding: '3px 8px', borderRadius: RADIUS.full }}>{listing.typeLabel}</span>
-          <FollowButton targetUserId={listing.userId} currentUserId={user?.id} compact />
-          <PostOptionsMenu
-            isOwner={isOwner}
-            onEdit={() => nav(`/edit_listing/${listing.id}`)}
-            onDelete={async () => {
-              if (!confirm('هل أنت متأكد من حذف هذا الإعلان؟')) return;
-              const { error } = await supabase.from('listings').delete().eq('id', listing.id);
-              if (error) alert('فشل الحذف: ' + error.message);
-              else window.location.reload();
-            }}
-          />
         </div>
       </div>
 
@@ -296,27 +282,27 @@ export function HomeScreen() {
 
 function mapRow(r: Record<string, unknown>): Listing {
   return {
-    id:          (r.id          as string)  || '',
-    userId:      (r.user_id     as string)  || '',
-    userName:    (r.user_name   as string)  || 'مجهول',
-    userAvatar:  (r.user_avatar as string)  || '؟',
-    userCity:    (r.user_city   as string)  || '',
-    userRating:  Number(r.user_rating)      || 4.5,
-    title:       (r.title       as string)  || '',
-    description: (r.description as string)  || '',
-    price:       r.price != null ? Number(r.price) : null,
-    priceLabel:  (r.price_label as string)  || '',
-    type:        (r.type        as Listing['type']) || 'sale',
-    typeLabel:   (r.type_label  as string)  || '',
-    category:    (r.category    as string)  || '',
-    image:       (r.image       as string)  || '',
-    city:        (r.city        as string)  || '',
-    phone:       (r.phone       as string)  || '',
-    whatsapp:    (r.whatsapp    as string)  || '',
-    createdAt:   (r.created_at  as string)  || '',
-    likes:       Number(r.likes)            || 0,
-    comments:    Number(r.comments)         || 0,
-    views:       Number(r.views)            || 0,
-    badge:       r.badge as Listing['badge'],
+    id: r.id as string,
+    userId: r.user_id as string,
+    userName: r.user_name as string,
+    userAvatar: r.user_avatar as string,
+    userCity: r.user_city as string,
+    userRating: Number(r.user_rating) || 4.5,
+    title: r.title as string,
+    description: r.description as string,
+    price: r.price != null ? Number(r.price) : null,
+    priceLabel: r.price_label as string,
+    type: r.type as Listing['type'],
+    typeLabel: r.type_label as string,
+    category: r.category as string,
+    image: r.image as string,
+    city: r.city as string,
+    phone: r.phone as string,
+    whatsapp: r.whatsapp as string,
+    createdAt: r.created_at as string,
+    likes: Number(r.likes) || 0,
+    comments: Number(r.comments) || 0,
+    views: Number(r.views) || 0,
+    badge: r.badge as Listing['badge'],
   };
 }
